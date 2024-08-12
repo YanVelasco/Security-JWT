@@ -24,6 +24,12 @@ public class UserEntity implements UserDetails {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
+    public UserEntity(String login, String encryptedPassword, UserRole role) {
+        this.login = login;
+        this.password = encryptedPassword;
+        this.role = role;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (this.role == UserRole.ADMIN) {
