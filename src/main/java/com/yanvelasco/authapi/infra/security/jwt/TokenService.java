@@ -6,46 +6,45 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.yanvelasco.authapi.domain.user.entity.UserEntity;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 
 @Service
 public class TokenService {
-
-    @Value("${jwt.secret}")
-    private String SECRET;
+    private String secret = "secret";
 
     public String generateToken(UserEntity user) {
         try {
-            Algorithm algorithm = Algorithm.HMAC256(SECRET);
-
-            return JWT.create()
+            Algorithm algorithm = Algorithm.HMAC256(secret);
+            String token = JWT.create()
                     .withIssuer("auth-api")
                     .withSubject(user.getLogin())
-                    .withExpiresAt(getExpirationTime())
+                    .withExpiresAt(genExpirationDate())
                     .sign(algorithm);
-        }catch (JWTCreationException e) {
-            throw new RuntimeException("Error creating token", e);
+            return token;
+        } catch (JWTCreationException exception) {
+            throw new RuntimeException("Error while generating token", exception);
         }
     }
 
-    public String validateToken(String token){
+    public String validateToken(String token) {
         try {
-            Algorithm algorithm = Algorithm.HMAC256(SECRET);
+            Algorithm algorithm = Algorithm.HMAC256(secret);
             return JWT.require(algorithm)
                     .withIssuer("auth-api")
                     .build()
                     .verify(token)
                     .getSubject();
-        }catch (JWTVerificationException e) {
+        } catch (JWTVerificationException exception) {
             return "";
         }
     }
 
-    private Instant getExpirationTime() {
-        return LocalDateTime.now().plusHours(2).atZone(ZoneId.systemDefault()).toInstant();
+    private Instant genExpirationDate() {
+        return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
     }
 }
